@@ -4,7 +4,7 @@ Materiales de estudio organizados por unidad.
 No necesitás cuenta para acceder — guardá esta página en favoritos.
 
 ---
-[¿Cómo usar Classroom?](https://aleparni.github.io/Fisica-2CT/forceinventory.html)
+[¿Cómo usar Classroom?](https://aleparni.github.io/Fisica-2CT/classroom.html)
 
 
 ## 📐 Unidades
