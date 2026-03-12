@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz: Fuerzas & Dinámica</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --accent: #00e5ff;
+    --accent2: #ff3d71;
+    --accent3: #ffe600;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --correct: #00e676;
+    --wrong: #ff3d71;
+    --border: rgba(0,229,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
+  .orb2 { width: 300px; height: 300px; background: var(--accent2); bottom: -80px; right: -80px; }
+  .orb3 { width: 200px; height: 200px; background: var(--accent3); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .label-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 4px 14px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 10vw, 90px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--text) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    margin-bottom: 30px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .progress-track {
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* SCORE BADGES */
+  .score-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .badge {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .badge-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .badge-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .badge.correct .badge-val { color: var(--correct); }
+  .badge.wrong .badge-val { color: var(--wrong); }
+  .badge.total .badge-val { color: var(--accent); }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--accent);
+  }
+
+  .q-number {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .q-text {
+    font-size: 17px;
+    line-height: 1.6;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .q-formula {
+    display: inline-block;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    padding: 6px 14px;
+    font-size: 15px;
+    margin: 14px 0 0;
+  }
+
+  /* OPTIONS */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s ease 0.1s both;
+  }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  .option-btn .opt-letter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.06);
+    transform: translateY(-1px);
+  }
+
+  .option-btn.correct-ans {
+    border-color: var(--correct) !important;
+    background: rgba(0,230,118,0.1) !important;
+    animation: pulse-green 0.5s ease;
+  }
+
+  .option-btn.wrong-ans {
+    border-color: var(--wrong) !important;
+    background: rgba(255,61,113,0.1) !important;
+    animation: shake 0.4s ease;
+  }
+
+  .option-btn.reveal-correct {
+    border-color: var(--correct) !important;
+    opacity: 0.5;
+  }
+
+  @keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(0,230,118,0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(0,230,118,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,230,118,0); }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* FEEDBACK */
+  .feedback-box {
+    padding: 16px 20px;
+    border-left: 4px solid;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .feedback-box.show { display: block; }
+  .feedback-box.ok { border-color: var(--correct); background: rgba(0,230,118,0.07); color: var(--correct); }
+  .feedback-box.fail { border-color: var(--wrong); background: rgba(255,61,113,0.07); color: #ff8fab; }
+
+  .feedback-box strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 14px; }
+
+  /* BUTTONS */
+  .btn-next {
+    display: none;
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+
+  .btn-next:hover { background: #fff; transform: translateY(-1px); }
+  .btn-next.show { display: block; animation: fadeUp 0.3s ease; }
+
+  /* RESULTS SCREEN */
+  .results-screen {
+    display: none;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .results-screen.show { display: block; }
+
+  .results-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 20vw, 130px);
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 20px 0 10px;
+  }
+
+  .results-label {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+
+  .grade-badge {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    padding: 12px 30px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+  }
+
+  .grade-a { background: rgba(0,230,118,0.15); border: 1px solid var(--correct); color: var(--correct); }
+  .grade-b { background: rgba(0,229,255,0.15); border: 1px solid var(--accent); color: var(--accent); }
+  .grade-c { background: rgba(255,230,0,0.15); border: 1px solid var(--accent3); color: var(--accent3); }
+  .grade-d { background: rgba(255,61,113,0.15); border: 1px solid var(--wrong); color: var(--wrong); }
+
+  .results-msg {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 30px;
+    line-height: 1.7;
+  }
+
+  .results-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 500px;
+    margin: 0 auto 34px;
+  }
+
+  .breakdown-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px 10px;
+  }
+
+  .breakdown-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .breakdown-lbl {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .btn-restart {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 14px 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-restart:hover { background: var(--accent); color: var(--bg); }
+
+  /* START SCREEN */
+  .start-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .start-screen.hidden { display: none; }
+
+  .start-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 500px;
+    margin: 30px auto;
+  }
+
+  .info-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px 12px;
+  }
+
+  .info-box-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .info-box-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .info-box-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  .btn-start {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    padding: 18px 60px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+
+  .btn-start:hover { background: #fff; transform: scale(1.02); }
+
+  .quiz-main { display: none; }
+  .quiz-main.show { display: block; }
+
+  @media (max-width: 520px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .results-breakdown { grid-template-columns: repeat(3, 1fr); }
+    .start-info { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="label-tag">Física · Bachillerato</div>
+    <div class="title">Fuerzas &<br>Dinámica</div>
+    <div class="subtitle">Quiz interactivo · Leyes de Newton & más</div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="start-screen" id="startScreen">
+    <div class="start-info">
+      <div class="info-box">
+        <div class="info-box-icon">📋</div>
+        <div class="info-box-label">Preguntas</div>
+        <div class="info-box-val">10</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-icon">⚡</div>
+        <div class="info-box-label">Tema</div>
+        <div class="info-box-val">Newton</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-icon">🎯</div>
+        <div class="info-box-label">Nivel</div>
+        <div class="info-box-val">Bachiller</div>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">INICIAR QUIZ</button>
+  </div>
+
+  <!-- QUIZ MAIN -->
+  <div class="quiz-main" id="quizMain">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progressText">PREGUNTA 1 / 10</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="score-row">
+      <div class="badge correct"><div class="badge-val" id="scoreCorrect">0</div><div class="badge-label">Correctas</div></div>
+      <div class="badge wrong"><div class="badge-val" id="scoreWrong">0</div><div class="badge-label">Incorrectas</div></div>
+      <div class="badge total"><div class="badge-val" id="scoreTotal">0</div><div class="badge-label">Puntos</div></div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-number" id="qNumber">PREGUNTA 01</div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-formula" id="qFormula" style="display:none"></div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <div class="feedback-box" id="feedbackBox">
+      <strong id="feedbackTitle"></strong>
+      <span id="feedbackText"></span>
+    </div>
+
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">SIGUIENTE PREGUNTA →</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-screen" id="resultsScreen">
+    <div class="label-tag">Resultados</div>
+    <div class="results-score" id="finalScore">0</div>
+    <div class="results-label">puntos obtenidos</div>
+    <div class="grade-badge" id="gradeBadge">—</div>
+    <div class="results-msg" id="resultsMsg"></div>
+    <div class="results-breakdown">
+      <div class="breakdown-item">
+        <div class="breakdown-val" id="finalCorrect">0</div>
+        <div class="breakdown-lbl">Correctas</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-val" id="finalWrong">0</div>
+        <div class="breakdown-lbl">Incorrectas</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-val" id="finalPct">0%</div>
+        <div class="breakdown-lbl">Porcentaje</div>
+      </div>
+    </div>
+    <button class="btn-restart" onclick="restartQuiz()">↺ VOLVER A INTENTAR</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    text: "¿Cuál es el enunciado de la Primera Ley de Newton (Ley de Inercia)?",
+    formula: null,
+    options: [
+      "Un objeto en reposo permanece en reposo, y uno en movimiento continúa moviéndose con velocidad constante, salvo que actúe una fuerza neta.",
+      "La aceleración de un objeto es directamente proporcional a la fuerza neta e inversamente proporcional a su masa.",
+      "A toda acción corresponde una reacción igual y opuesta.",
+      "La fuerza de gravedad es siempre mayor que cualquier otra fuerza."
+    ],
+    correct: 0,
+    explanation: "La 1ª Ley de Newton establece que un cuerpo mantiene su estado de reposo o movimiento rectilíneo uniforme si la fuerza neta que actúa sobre él es cero. Esto se conoce como el principio de inercia."
+  },
+  {
+    text: "Una caja de 10 kg experimenta una fuerza neta de 50 N. ¿Cuál es su aceleración?",
+    formula: "F = m · a",
+    options: ["0.2 m/s²", "5 m/s²", "500 m/s²", "50 m/s²"],
+    correct: 1,
+    explanation: "Usando F = m·a → a = F/m = 50 N / 10 kg = 5 m/s². La fuerza se mide en Newtons (kg·m/s²)."
+  },
+  {
+    text: "Un astronauta empuja una pared de la nave espacial con 80 N. ¿Con qué fuerza lo empuja la pared a él?",
+    formula: null,
+    options: ["0 N, porque está en ingravidez", "40 N, la mitad", "80 N, fuerza igual y opuesta", "160 N, el doble"],
+    correct: 2,
+    explanation: "3ª Ley de Newton: toda acción tiene una reacción igual en magnitud y opuesta en dirección. La pared empuja al astronauta con exactamente 80 N en la dirección contraria."
+  },
+  {
+    text: "¿Qué es el peso de un objeto?",
+    formula: "P = m · g",
+    options: [
+      "La cantidad de materia que contiene",
+      "La fuerza gravitacional que actúa sobre él (P = m·g)",
+      "Su resistencia al movimiento",
+      "Lo mismo que la masa, expresado en kg"
+    ],
+    correct: 1,
+    explanation: "El peso (P) es la fuerza gravitacional que actúa sobre un objeto: P = m·g, donde g ≈ 9.8 m/s². Se mide en Newtons. La masa (kg) es la cantidad de materia y no cambia con la gravedad, pero el peso sí."
+  },
+  {
+    text: "Dos fuerzas actúan sobre un objeto: 30 N hacia la derecha y 10 N hacia la izquierda. ¿Cuál es la fuerza neta?",
+    formula: null,
+    options: ["40 N hacia la derecha", "20 N hacia la derecha", "20 N hacia la izquierda", "0 N (se anulan)"],
+    correct: 1,
+    explanation: "La fuerza neta es la suma vectorial: 30 N − 10 N = 20 N hacia la derecha. Las fuerzas en sentido contrario se restan."
+  },
+  {
+    text: "Una persona de 60 kg está de pie sobre una balanza en un ascensor que sube con aceleración de 2 m/s². ¿Qué fuerza normal registra la balanza? (g = 10 m/s²)",
+    formula: "N = m(g + a)",
+    options: ["480 N", "600 N", "720 N", "60 N"],
+    correct: 2,
+    explanation: "Cuando el ascensor acelera hacia arriba, la normal aumenta: N = m(g + a) = 60 × (10 + 2) = 60 × 12 = 720 N. Esto explica por qué 'te sientes más pesado' al subir."
+  },
+  {
+    text: "¿Cuál es la unidad de medida de la fuerza en el Sistema Internacional?",
+    formula: "1 N = 1 kg · m/s²",
+    options: ["Joule (J)", "Pascal (Pa)", "Newton (N)", "Watt (W)"],
+    correct: 2,
+    explanation: "La unidad de fuerza en el SI es el Newton (N), definido como la fuerza necesaria para dar una aceleración de 1 m/s² a una masa de 1 kg. Los Joules miden energía, los Pascales presión y los Watts potencia."
+  },
+  {
+    text: "Un auto de 1000 kg frena desde 20 m/s hasta detenerse en 4 segundos. ¿Cuál es la fuerza de frenado?",
+    formula: "a = Δv / Δt",
+    options: ["5000 N", "80000 N", "250 N", "200 N"],
+    correct: 0,
+    explanation: "Primero, a = Δv/Δt = (0 − 20)/4 = −5 m/s². Luego F = m·a = 1000 × 5 = 5000 N (frenado). El signo negativo indica que la fuerza es contraria al movimiento."
+  },
+  {
+    text: "¿Cuándo se dice que un objeto está en equilibrio dinámico?",
+    formula: null,
+    options: [
+      "Cuando está en reposo absoluto",
+      "Cuando se mueve con velocidad constante y la fuerza neta es cero",
+      "Cuando la gravedad es la única fuerza que actúa",
+      "Cuando la aceleración es constante pero no nula"
+    ],
+    correct: 1,
+    explanation: "El equilibrio dinámico ocurre cuando un objeto se mueve con velocidad constante (en línea recta). La fuerza neta es cero (ΣF = 0). Por ejemplo, un auto en autopista a velocidad constante: el motor compensa la fricción."
+  },
+  {
+    text: "Si la masa de un objeto se duplica y la fuerza neta se mantiene constante, ¿qué ocurre con la aceleración?",
+    formula: "a = F / m",
+    options: ["Se duplica", "Se mantiene igual", "Se reduce a la mitad", "Se cuadruplica"],
+    correct: 2,
+    explanation: "De la 2ª Ley: a = F/m. Si m se duplica (2m) y F no cambia, entonces a = F/(2m) = (F/m)/2. La aceleración se reduce a la mitad. Mayor masa → mayor inercia → menor aceleración."
+  }
+];
+
+let currentQ = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let totalPoints = 0;
+let answered = false;
+
+function startQuiz() {
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('quizMain').classList.add('show');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = QUESTIONS[currentQ];
+
+  document.getElementById('qNumber').textContent = `PREGUNTA ${String(currentQ+1).padStart(2,'0')}`;
+  document.getElementById('qText').textContent = q.text;
+
+  const fEl = document.getElementById('qFormula');
+  if (q.formula) { fEl.style.display = 'inline-block'; fEl.textContent = q.formula; }
+  else { fEl.style.display = 'none'; }
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBox').classList.remove('show','ok','fail');
+  document.getElementById('btnNext').classList.remove('show');
+
+  const pct = Math.round((currentQ / QUESTIONS.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `PREGUNTA ${currentQ+1} / ${QUESTIONS.length}`;
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  // Re-trigger animation
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = '';
+}
+
+function selectAnswer(idx, btn) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUESTIONS[currentQ];
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('feedbackBox');
+  const fbTitle = document.getElementById('feedbackTitle');
+  const fbText = document.getElementById('feedbackText');
+
+  if (idx === q.correct) {
+    btn.classList.add('correct-ans');
+    correctCount++;
+    totalPoints += 10;
+    fb.className = 'feedback-box show ok';
+    fbTitle.textContent = '✓ ¡Correcto!';
+    fbText.textContent = q.explanation;
+  } else {
+    btn.classList.add('wrong-ans');
+    allBtns[q.correct].classList.add('reveal-correct');
+    wrongCount++;
+    fb.className = 'feedback-box show fail';
+    fbTitle.textContent = '✗ Incorrecto';
+    fbText.textContent = q.explanation;
+  }
+
+  document.getElementById('scoreCorrect').textContent = correctCount;
+  document.getElementById('scoreWrong').textContent = wrongCount;
+  document.getElementById('scoreTotal').textContent = totalPoints;
+  document.getElementById('btnNext').classList.add('show');
+
+  const btnNext = document.getElementById('btnNext');
+  if (currentQ === QUESTIONS.length - 1) {
+    btnNext.textContent = 'VER RESULTADOS →';
+  } else {
+    btnNext.textContent = 'SIGUIENTE PREGUNTA →';
+  }
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= QUESTIONS.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizMain').classList.remove('show');
+  const res = document.getElementById('resultsScreen');
+  res.classList.add('show');
+
+  const pct = Math.round((correctCount / QUESTIONS.length) * 100);
+
+  document.getElementById('finalScore').textContent = totalPoints;
+  document.getElementById('finalCorrect').textContent = correctCount;
+  document.getElementById('finalWrong').textContent = wrongCount;
+  document.getElementById('finalPct').textContent = pct + '%';
+
+  const badge = document.getElementById('gradeBadge');
+  const msg = document.getElementById('resultsMsg');
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressPct').textContent = '100%';
+
+  if (pct >= 90) {
+    badge.textContent = '⭐ EXCELENTE';
+    badge.className = 'grade-badge grade-a';
+    msg.textContent = 'Dominas las Leyes de Newton y los conceptos de dinámica. ¡Eres un crack de la física!';
+  } else if (pct >= 70) {
+    badge.textContent = '👍 MUY BIEN';
+    badge.className = 'grade-badge grade-b';
+    msg.textContent = 'Tienes una buena base en fuerzas y dinámica. Repasa los conceptos donde fallaste para perfeccionar.';
+  } else if (pct >= 50) {
+    badge.textContent = '📚 REGULAR';
+    badge.className = 'grade-badge grade-c';
+    msg.textContent = 'Entiendes algunos conceptos, pero necesitas reforzar las Leyes de Newton y el análisis de fuerzas.';
+  } else {
+    badge.textContent = '💪 SIGUE ESTUDIANDO';
+    badge.className = 'grade-badge grade-d';
+    msg.textContent = 'No te desanimes. Repasa las tres Leyes de Newton, F = m·a y los diagramas de cuerpo libre. ¡Tú puedes!';
+  }
+}
+
+function restartQuiz() {
+  currentQ = 0; correctCount = 0; wrongCount = 0; totalPoints = 0; answered = false;
+  document.getElementById('resultsScreen').classList.remove('show');
+  document.getElementById('scoreCorrect').textContent = '0';
+  document.getElementById('scoreWrong').textContent = '0';
+  document.getElementById('scoreTotal').textContent = '0';
+  document.getElementById('quizMain').classList.add('show');
+  loadQuestion();
+}
+</script>
+</body>
+</html>
