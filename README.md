@@ -17,7 +17,7 @@ No necesitás cuenta para acceder — guardá esta página en favoritos.
 
 [SUB. A El misterio del hilo roto](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/Elmisteriodelhiloroto.html)
 
-[SUB. A El misterio de la masa sumergida](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/masadesaparecidav2.html)
+[SUB. B El misterio de la masa sumergida](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/masadesaparecidav2.html)
 
 
 
