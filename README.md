@@ -6,6 +6,7 @@ No necesitás cuenta para acceder — guardá esta página en favoritos.
 ---
 [¿Cómo usar Classroom?](https://aleparni.github.io/Fisica-2CT/classroom.html)
 
+[Infrmación general, criterios de evaluación y una pregunta fértil](https://aleparni.github.io/Fisica-2CT/2cvct.html)
 
 ## 📐 Unidades
 
