@@ -19,7 +19,7 @@ No necesitás cuenta para acceder — guardá esta página en favoritos.
 
 [SUB. B El misterio de la masa sumergida](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/masadesaparecidav2.html)
 
-[Quizz sobre Leyes de Newton](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/qizz-fuerzas-dinamica.html)
+[Quizz sobre Leyes de Newton](https://aleparni.github.io/Fisica-2CTSemanaintroductoria/quiz-fuerzas-dinamica.html)
 
 
 
